@@ -4,7 +4,7 @@
 *********************************************
 **  Quim Llums
 **
-**	http://www.skmcreatiu.com
+**  http://www.skmcreatiu.com
 **  http://blog.drbit.nl
 **  http://drbit.nl
 **
@@ -16,14 +16,14 @@
 #include "WProgram.h"
 
 
-								   
+
 class Stepper_ac
 {
   public:
-    // FUCNTIONS
-    Stepper_ac(int step_pin, int direction_pin, int sensor_pin, int ms1, int ms2, int motor_original_steps, int step_mode);
+	// FUCNTIONS
+	Stepper_ac(int step_pin, int direction_pin, int sensor_pin, int ms1, int ms2, int motor_original_steps, int step_mode);
 	void set_init_position();
-    void do_step();
+	void do_step();
 	void count_step(bool _temp_direction);
 	//int get_position();
 	int get_steps();
@@ -47,9 +47,9 @@ class Stepper_ac
 
 
   private:
-    // PINS
-    int _step_pin;
-    int _direction_pin;
+	// PINS
+	int _step_pin;
+	int _direction_pin;
 	int _sensor_pin;
 	int _ms1;
 	int _ms2;
@@ -58,7 +58,7 @@ class Stepper_ac
 	long _stepPosition;				//! Position of stepper motor (relative to starting position as zero) 
 	int _stepCycle;
 	bool _direction;	
-	int _step_accuracy;     		//! Step accuracy is the number of steps we are counting each time me move. This property depends on the motor mode we selected
+	int _step_accuracy;				//! Step accuracy is the number of steps we are counting each time me move. This property depends on the motor mode we selected
 	int _step_mode;
 	int _motor_original_steps;
 };
