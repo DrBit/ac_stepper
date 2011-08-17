@@ -1,3 +1,14 @@
+/********************************************
+**  Name: Stepper_ac.h Library
+**  Created: 27/06/2011
+*********************************************
+**  Quim Llums
+**
+**	http://www.skmcreatiu.com
+**  http://blog.drbit.nl
+**  http://drbit.nl
+**
+*/
 
 #ifndef Stepper_ac_h
 #define Stepper_ac_h

@@ -1,0 +1,29 @@
+/********************************************
+**  Name: Seed Counter 
+**  Version: V0.6.1
+**  Date Created: 13/05/2011
+*********************************************
+**  REVISIONS
+**
+**  V0.6.1 - 17/08/2011
+**  * Added function
+**
+**
+**  V0.6 - 11/08/2011
+**  * Added new functions get_step_mode(),get_step_accuracy(), that return characterisitcs of each motor.
+**
+**  V0.5.3 - 10/08/2011
+**  * Updated constructor to accept motors without sensor pin (blisters)
+**  * Added managment of step modes with MS1 and MS2 pin handlers (half, quarter, full, eighth)
+**  * Major update of stepts counting system. Now in all motor modes we have the same step position at the same place in space.
+**
+**  V0.5.2 - 08/08/2011
+**  * Updated wait_till_reach_position function to count steps and cycles
+**
+**  V0.5.1 - 13/05/2011
+**  * Improvement of motor handeling with 4 new options: Full step,half step, quarter step, eighth step
+**  * Improved counting steps, now we have number of complete cycles + number of steps
+**    Example: Motor 1 count -> 20 cycles + 2034 steps
+**
+*********************************************
+*/
