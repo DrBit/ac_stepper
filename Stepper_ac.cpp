@@ -21,7 +21,8 @@
 // int ms2 -- Pin where the MS2 controller is connected
 // unsigned long motor_steps -- Total of steps of the motor
 // int step_mode		 -- 4 modes available: 1=FULL, 2=HALF, 4=QUARTER, 8=EIGHTH
-Stepper_ac::Stepper_ac(int step_pin, int direction_pin, int sensor_pin, int ms1, int ms2, int motor_original_steps, int step_mode)
+// ********************* ADD const in pin values to waste less RAM *******************
+Stepper_ac::Stepper_ac(const int step_pin, const int direction_pin, const int sensor_pin, const int ms1, const int ms2, const int motor_original_steps, int step_mode)
 {
 	// PINS SETUP 
 	pinMode(step_pin, OUTPUT);
@@ -200,7 +201,7 @@ int theDelay = 1;
 void Stepper_ac::move_step()
 {
 	// Using arduino code might take too long to put the pin on and off  (OLD approach)
-	// This is where we send to the easy driver a pulse with the right Width of Minimum 1.0 µs
+	// This is where we send to the easy driver a pulse with the right Width of Minimum 1.0 ï¿½s
 	digitalWrite (_step_pin, HIGH);
 	delayMicroseconds(theDelay);   // This is a trick to generate exactly 1uS delay in Arduino
 	digitalWrite (_step_pin, LOW);
