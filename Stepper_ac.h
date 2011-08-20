@@ -21,7 +21,7 @@ class Stepper_ac
 {
   public:
 	// FUCNTIONS
-	Stepper_ac(int step_pin, int direction_pin, int sensor_pin, int ms1, int ms2, int motor_original_steps, int step_mode);
+	Stepper_ac(const int step_pin, const int direction_pin, const int sensor_pin, const int ms1, const int ms2, const int motor_original_steps, int step_mode);
 	void set_init_position();
 	void do_step();
 	void count_step(bool _temp_direction);
