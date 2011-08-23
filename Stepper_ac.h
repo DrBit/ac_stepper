@@ -43,7 +43,7 @@ class Stepper_ac
 	int step_mode;
 	long stepPosition;  // check if it can be int
 	int stepCycle;
-	unsigned char Easy_steptab[];
+	// unsigned char Easy_steptab[];  // where does this comes from?? maybe a test?
 
 
   private:
