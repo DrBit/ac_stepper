@@ -11,7 +11,9 @@
 */
 
 #include "WProgram.h"
-#include "Stepper_ac.h"				   		   
+#include "Stepper_ac.h"			
+
+#define lib_version 63	   		   
 
 // SETUP	
 // int step_pin -- Pin where the step control is connected
@@ -160,6 +162,7 @@ void Stepper_ac::do_step()
   move_step();
 }
 
+// FIX BUG
 void Stepper_ac::count_step(bool _temp_direction)
 {
 	if(!_temp_direction){
@@ -239,4 +242,8 @@ void Stepper_ac::wait_till_reach_position(long m_steps,long m_cycles)
 	while ((get_steps() != m_steps) && (get_steps_cycles() != m_cycles)) {
 		// wait doing nothing until we areach the desired position 
 	} 
+}
+
+int Stepper_ac::get_version() {
+	return lib_version;
 }

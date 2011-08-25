@@ -1,9 +1,12 @@
 /********************************************
 **  Name: Seed Counter 
-**  Version: V0.6.1
+**  Version: V0.6.3  (Update also in the code)
 **  Date Created: 13/05/2011
 *********************************************
 **  REVISIONS
+**
+**  V0.6.3 - 25/08/2011
+**  * Added Version tracking to warn user when working whith an outdatet version of the library
 **
 **  V0.6.2 - 23/08/2011
 **  * Changed variable types so we inprove RAM usage

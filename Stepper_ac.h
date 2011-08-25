@@ -38,6 +38,7 @@ class Stepper_ac
 	void initiate();
 	bool sensor_check();
 	void wait_till_reach_position(long m_steps, long m_cycles);
+	int get_version();
 	//Properties
 	int step_accuracy;
 	int step_mode;
