@@ -101,7 +101,7 @@ int Stepper_ac::get_step_accuracy()
 
 int Stepper_ac::get_steps_per_cycle()
 {
-	return _step_accuracy * _motor_original_steps;
+	return (_step_accuracy * _motor_original_steps);
 }
 
 void Stepper_ac::set_init_position()
@@ -172,30 +172,31 @@ void Stepper_ac::count_step(bool _temp_direction)
 	}
 	
 	if (_stepCycle == 0) {		// If we are in the first turn we see if we gowing forward or backwards
-		if (_stepPosition == (_motor_total_possible_steps + _step_accuracy)){		// we chek the upper limit (if there was no limit (0) nothing will happen)
+		if (_stepPosition > _motor_total_possible_steps){		// we chek the upper limit (if there was no limit (0) nothing will happen)
 			_stepCycle++; 
-			_stepPosition = _step_accuracy;
-		}else if (_stepPosition == -(_motor_total_possible_steps + _step_accuracy)) {	// we chek the lower limit, -1 
+			_stepPosition = _stepPosition - _motor_total_possible_steps;
+		}else if (_stepPosition < (_motor_total_possible_steps - (2*_motor_total_possible_steps))) {	// we chek the lower limit, -1 
 			_stepCycle--;
-			_stepPosition = -_step_accuracy;
+			_stepPosition = _motor_total_possible_steps + _stepPosition;
 		}
+		
 	}else if (_stepCycle > 0) {  // Means we go forwards so count in the positive range
-		if (_stepPosition == _motor_total_possible_steps + _step_accuracy){			// we chek the upper limit (if there was no limit (0) nothing will happen)
+		if (_stepPosition > _motor_total_possible_steps){			// we chek the upper limit (if there was no limit (0) nothing will happen)
 			_stepCycle++; 
-			_stepPosition = _step_accuracy;
-		}else if (_stepPosition == 0) {  // we chek the lower limit, -1 
+			_stepPosition = _stepPosition - _motor_total_possible_steps;
+		}else if (_stepPosition < 0) {  // we chek the lower limit, -1 
 			_stepCycle--;
-			_stepPosition = _motor_total_possible_steps;
+			_stepPosition = _motor_total_possible_steps + _stepPosition;
 		}
-	}else if (_stepCycle < 0) {  // Means we go backwards so count in the negative range
-		if (_stepPosition == -(_motor_total_possible_steps + _step_accuracy)){		// In negative range this is the lower limit
+	}/*else if (_stepCycle < 0) {  // Means we go backwards so count in the negative range
+		if (_stepPosition <= (-_motor_total_possible_steps)){		// In negative range this is the lower limit
 			_stepCycle--; 
 			_stepPosition = -_step_accuracy;
-		}else if (_stepPosition == 0) {	// In negative range this is the upper limit
+		}else if (_stepPosition <= 0) {	// In negative range this is the upper limit
 			_stepCycle++;
 			_stepPosition = -_motor_total_possible_steps;
 		}
-	}
+	}*/
 }
 
 int theDelay = 1;

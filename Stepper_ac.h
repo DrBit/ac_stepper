@@ -55,7 +55,7 @@ class Stepper_ac
 	int _ms1;
 	int _ms2;
 	// Properties
-	unsigned long _motor_total_possible_steps;		//! Numer of stpes of the motor (if using a different type of motor)
+	long _motor_total_possible_steps;		//! Numer of stpes of the motor (if using a different type of motor)
 	long _stepPosition;				//! Position of stepper motor (relative to starting position as zero) 
 	int _stepCycle;
 	bool _direction;	
