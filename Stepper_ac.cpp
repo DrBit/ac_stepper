@@ -184,7 +184,7 @@ void Stepper_ac::count_step(bool _temp_direction)
 		if (_stepPosition > _motor_total_possible_steps){			// we chek the upper limit (if there was no limit (0) nothing will happen)
 			_stepCycle++; 
 			_stepPosition = _stepPosition - _motor_total_possible_steps;
-		}else if (_stepPosition < 0) {  // we chek the lower limit, -1 
+		}else if (_stepPosition < 1) {  // we chek the lower limit, -1 
 			_stepCycle--;
 			_stepPosition = _motor_total_possible_steps + _stepPosition;
 		}
