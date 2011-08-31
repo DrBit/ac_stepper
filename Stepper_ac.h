@@ -37,7 +37,15 @@ class Stepper_ac
 	int get_steps_per_cycle();
 	void initiate();
 	bool sensor_check();
+	// Movement functions
 	void wait_till_reach_position(long m_steps, long m_cycles);
+	void select_case (int vel_case, int steps_case) ;
+	void move_n_steps_slow (unsigned int mov_steps);
+	int move_n_steps_fast (unsigned int mov_steps);
+	void ramp_down (int accel_factor);
+	void ramp_up (int accel_factor);
+	void move_motor(unsigned int cycles,unsigned int steps, int accel_factor, boolean direction);
+	void got_to_position (unsigned int pos_cycles, unsigned int pos_steps);
 	int get_version();
 	//Properties
 	int step_accuracy;

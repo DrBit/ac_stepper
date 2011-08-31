@@ -1,9 +1,13 @@
 /********************************************
 **  Name: Seed Counter 
-**  Version: V0.6.3  (Update also in the code)
+**  Version: V1.0  (Update also in the code)
 **  Date Created: 13/05/2011
 *********************************************
 **  REVISIONS
+**
+**  V1.0 - 31/08/2011
+**  * Added new movement functions with simple acceleracion. (only tested for X axis)
+**  * Converted Library to version V1.0 completely usable for any project
 **
 **  V0.6.3 - 25/08/2011
 **  * Fixed Bug in the internal stepper counter system that would cause error during a certain manipulation of step modes
