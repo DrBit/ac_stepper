@@ -298,7 +298,7 @@ void Stepper_ac::got_to_position (unsigned int pos_cycles, unsigned int pos_step
 		}
 		
 		// Acceleration 40 seems to work pretty well
-		const int acceleration = 40; 
+		const int acceleration = 50; 
 		move_motor(cycles_to_move, steps_to_move, acceleration, direction);
 	}
 }
