@@ -13,7 +13,7 @@
 #include "WProgram.h"
 #include "Stepper_ac.h"			
 
-#define lib_version 10	   		   
+#define lib_version 11	   		   
 
 // SETUP	
 // int step_pin -- Pin where the step control is connected
@@ -251,7 +251,7 @@ void Stepper_ac::wait_till_reach_position(long m_steps,long m_cycles)
 // ************************************************************
 
 void Stepper_ac::got_to_position (unsigned int pos_cycles, unsigned int pos_steps) {
-
+	boolean move = true;
 	//error chgecking if steps are greater that 1600 (max).
 	int cycles_to_move = pos_cycles - get_steps_cycles();
 	int steps_to_move =  pos_steps - get_steps();
@@ -264,40 +264,43 @@ void Stepper_ac::got_to_position (unsigned int pos_cycles, unsigned int pos_step
 	}else if (cycles_to_move > 0) {
 		//  direction true
 		direction = true;
-	}else{  // Means its = to 0
+	}else{  			// Means its = to 0
 		// we need to check the steps in order to determine the direction
 		if (steps_to_move < 0) {
 			direction = false;
-		}else{
+		}else if (steps_to_move > 0){
 		   direction = true;
-		   // in case steps_to_move is == 0 we dont care as we will not be moving anywhere
+		}else { 		// in case steps_to_move is == 0 we dont care as we will not be moving anywhere
+			move = false;
 		}
 	}
 
-	if (direction) {
-		if (steps_to_move > 0) {
-			// Keeps as it is
+	if (move) {
+		if (direction) {
+			if (steps_to_move > 0) {
+				// Keeps as it is
+			} else {
+				// because its a negative number we add it to the total and we will get a positive number
+				steps_to_move = 1600 + steps_to_move;
+				cycles_to_move --;
+			}
 		} else {
-			// because its a negative number we add it to the total and we will get a positive number
-			steps_to_move = 1600 + steps_to_move;
-			cycles_to_move --;
+			if (steps_to_move < 0) {	
+				// Numbers stay as they are. 
+			} else {
+				steps_to_move = steps_to_move -1600;
+				cycles_to_move ++;
+			}
+			//We change them from negative to positive as the direction will control the motion.
+			// Prepare numbers to be send
+			cycles_to_move = -cycles_to_move;
+			steps_to_move = -steps_to_move;
 		}
-	} else {
-		if (steps_to_move < 0) {	
-			// Numbers stay as they are. 
-		} else {
-			steps_to_move = steps_to_move -1600;
-			cycles_to_move ++;
-		}
-		//We change them from negative to positive as the direction will control the motion.
-		// Prepare numbers to be send
-		cycles_to_move = -cycles_to_move;
-		steps_to_move = -steps_to_move;
+		
+		// Acceleration 40 seems to work pretty well
+		const int acceleration = 40; 
+		move_motor(cycles_to_move, steps_to_move, acceleration, direction);
 	}
-	
-	// Acceleration 40 seems to work pretty well
-	const int acceleration = 40; 
-	move_motor(cycles_to_move, steps_to_move, acceleration, direction);
 }
 
 
