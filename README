@@ -1,6 +1,6 @@
 /********************************************
 **  Name: Seed Counter 
-**  Version: V1.1  (Update also in the code)
+**  Version: V1.2  (Update also in the code)
 **  Date Created: 13/05/2011
 *********************************************
 **  REVISIONS
@@ -40,3 +40,7 @@
 **
 *********************************************
 */
+
+TODO
+
+Change the do step function for a nice and quick way of changin state of pins

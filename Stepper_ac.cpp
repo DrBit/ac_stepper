@@ -11,10 +11,9 @@
 */
 
 #include "WProgram.h"
-#include "Stepper_ac.h"			
+#include "Stepper_ac.h"
 
-#define lib_version 11	   		   
-
+#define lib_version 12
 // SETUP	
 // int step_pin -- Pin where the step control is connected
 // int direction_pin -- Pin where the direction control is connected
