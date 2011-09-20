@@ -1,9 +1,12 @@
 /********************************************
 **  Name: Seed Counter 
-**  Version: V1.1  (Update also in the code)
+**  Version: V1.2  (Update also in the code)
 **  Date Created: 13/05/2011
 *********************************************
 **  REVISIONS
+**
+**  V1.2 - 17/09/2011 (new branch)
+**  * Changed acceleration metoth for motors. Now you can controll it from software.
 **
 **  V1.1 - 14/09/2011
 **  * Fix bug in motor "got_to_position" function in which would cause an error when calling it and trying to go to the same position we where.

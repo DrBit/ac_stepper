@@ -13,7 +13,7 @@
 #include "WProgram.h"
 #include "Stepper_ac.h"			
 
-#define lib_version 11	   		   
+#define lib_version 12	   		   
 
 // SETUP	
 // int step_pin -- Pin where the step control is connected
@@ -298,7 +298,7 @@ void Stepper_ac::got_to_position (unsigned int pos_cycles, unsigned int pos_step
 		}
 		
 		// Acceleration 40 seems to work pretty well
-		const int acceleration = 50; 
+		const int acceleration = 40; 
 		move_motor(cycles_to_move, steps_to_move, acceleration, direction);
 	}
 }
@@ -405,7 +405,7 @@ void Stepper_ac::select_case (int vel_case, int steps_case) {
 		change_step_mode(8);		// Change mode 8
 		for (int a = 0; a < steps_case; a++) {
 			do_step();
-			delayMicroseconds (260);
+			delayMicroseconds (330);
 		}
 	}
 	if (vel_case == 2) {
