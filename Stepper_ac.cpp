@@ -13,7 +13,7 @@
 #include "WProgram.h"
 #include "Stepper_ac.h"
 
-  #define DEBUG_acceleration		// Not recomended in real situation, motor wont respond correctly
+//  #define DEBUG_acceleration		// Not recomended in real situation, motor wont respond correctly
 
 #define lib_version 12
 // SETUP	
