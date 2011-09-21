@@ -47,13 +47,18 @@ class Stepper_ac
 	void move_motor(unsigned int cycles,unsigned int steps, int accel_factor, boolean direction);
 	void got_to_position (unsigned int pos_cycles, unsigned int pos_steps);
 	int get_version();
+	// Newly added motion functions
+	void set_accel_profile(unsigned int init_timing, unsigned int ramp_inclination, unsigned int n_slopes_per_mode, unsigned int n_steps_per_slope);
+	void calculate_profile ();
+	unsigned int ramp_up_accelerated();
+	unsigned int move_n_steps_fast_accelerated (unsigned int mov_steps,unsigned int inner_delay);
+	void ramp_down_accelerated();
+	void move_motor_accel(unsigned int cycles,unsigned int steps, boolean direction);
 	//Properties
 	int step_accuracy;
 	int step_mode;
 	long stepPosition;  // check if it can be int
 	int stepCycle;
-	// unsigned char Easy_steptab[];  // where does this comes from?? maybe a test?
-
 
   private:
 	// PINS
@@ -70,6 +75,12 @@ class Stepper_ac
 	int _step_accuracy;				//! Step accuracy is the number of steps we are counting each time me move. This property depends on the motor mode we selected
 	int _step_mode;
 	int _motor_original_steps;
+	// Acceleration parameters
+	unsigned int _init_timing;
+	unsigned int _ramp_inclination;
+	unsigned int _n_slopes_per_mode;
+	unsigned int _n_steps_per_slope;	
+	unsigned int _acceleration_curve[4][21];	
 };
 
 #endif

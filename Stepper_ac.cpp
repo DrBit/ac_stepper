@@ -13,6 +13,8 @@
 #include "WProgram.h"
 #include "Stepper_ac.h"
 
+//  #define DEBUG_acceleration		// Not recomended in real situation, motor wont respond correctly
+
 #define lib_version 12
 // SETUP	
 // int step_pin -- Pin where the step control is connected
@@ -47,6 +49,17 @@ Stepper_ac::Stepper_ac(const int step_pin, const int direction_pin, const int se
 	_stepCycle = 0;
 	// INITS (setup)
 	change_step_mode(step_mode);
+	// Acceleration parameters DEFAULT
+	// set_accel_profile(unsigned int init_timing, unsigned int ramp_inclination, unsigned int n_slopes_per_mode, unsigned int n_steps_per_slope)
+	set_accel_profile(700, 14, 10, 50);
+	// inlfuence in accelration
+	// _init_timing = 700;			// Usually fine tunea nice inclination ramp (140 micro seconds is the MAX for the motors)
+	// _ramp_inclination = 14;		// Less = more inclination = more aceleration  //  More = less inclination = less aceleration
+	// influence in torque
+	// _n_slopes_per_mode = 10;		// It also increases the inclination as more steps more divisions 
+	// ABSOLUT MAX 20!!!!!!!!!!!!!
+	// _n_steps_per_slope = 50;
+
 }
 
 // 4 modes available: 1=FULL, 2=HALF, 4=QUARTER, 8=EIGHTH
@@ -161,7 +174,7 @@ void Stepper_ac::do_step()
   move_step();
 }
 
-// FIX BUG
+
 void Stepper_ac::count_step(bool _temp_direction)
 {
 	if(!_temp_direction){
@@ -195,7 +208,7 @@ void Stepper_ac::count_step(bool _temp_direction)
 			_stepCycle++;
 			_stepPosition = -_motor_total_possible_steps;
 		}
-	}*/
+	}*/ // IMPLEMENT
 }
 
 int theDelay = 1;
@@ -298,11 +311,248 @@ void Stepper_ac::got_to_position (unsigned int pos_cycles, unsigned int pos_step
 		
 		// Acceleration 40 seems to work pretty well
 		const int acceleration = 50; 
-		move_motor(cycles_to_move, steps_to_move, acceleration, direction);
+		// OLD procedure
+		// move_motor(cycles_to_move, steps_to_move, acceleration, direction);
+		// NEW procedure
+		move_motor_accel(cycles_to_move,steps_to_move, direction);
+	}
+}
+
+/***** Acceleration profile, gives to acceleration the right parameters  *****/
+void Stepper_ac::set_accel_profile(unsigned int init_timing, unsigned int ramp_inclination, unsigned int n_slopes_per_mode, unsigned int n_steps_per_slope)
+{
+	// Acceleration parameters
+	_init_timing = init_timing;
+	_ramp_inclination = ramp_inclination;
+	_n_slopes_per_mode = n_slopes_per_mode;		// MAX 20
+	_n_steps_per_slope = n_steps_per_slope;
+	calculate_profile ();
+}
+
+/***** Calculate profile, calculates and stores all delays in a matrix  *****/
+void Stepper_ac::calculate_profile () {
+	// (_n_slopes_per_mode)+1  Always plus 1 for the virtual step
+	// Number 3 stands for number of gears (or motor modes) we have 4 (0,1,2,3)
+	// _acceleration_curve[4][(_n_slopes_per_mode+1)];			// Bi-dimensional array
+	#if defined DEBUG_acceleration
+	Serial.println((_n_slopes_per_mode+1));
+	#endif
+	
+	// max sbdolute delay between steps is 160, less than that will have almost no torke;
+	
+	//      ___________Max_speed_____
+	//    _/
+	//  _/ _ramp_inclination
+	// /____ _ _ _ _ _ _ _ _ _ _ _ 
+	//
+	//////////////////////////////////////////
+	// each slope is at the same time smothed in small linear increments
+	unsigned int timing	= _init_timing;
+	//int motor_mode = init_motor_mode;
+	for (int m_mode=3; m_mode>=0; m_mode--) {
+		// precalculate the first timing
+		timing = timing + (timing / _ramp_inclination);		// This is a virtual timing requiered once 
+															// in each gear(motor_mode) to ramp all slopes in velocity
+		for (int counter_ramp=0 ; counter_ramp <= _n_slopes_per_mode; counter_ramp++){
+			_acceleration_curve[m_mode][counter_ramp] = timing;
+
+			#if defined DEBUG_acceleration
+			Serial.print(timing);
+			Serial.print(" at mode ");
+			Serial.print(m_mode);
+			Serial.print(" index ");
+			Serial.print(counter_ramp);
+			Serial.print(" DATA recorded = ");
+			Serial.println(_acceleration_curve[m_mode][counter_ramp]);
+			#endif
+
+			timing = timing - (timing / _ramp_inclination);			
+		}
+		timing = timing * 2;
+	}
+
+	#if defined DEBUG_acceleration
+	for (int m_mode=3; m_mode>=0; m_mode--) {
+		for (int a=0; a <= _n_slopes_per_mode; a++){
+			Serial.print("m_mode ");
+			Serial.print(m_mode);
+			Serial.print(" index ");
+			Serial.print(a);
+			Serial.print(" DATA: ");
+			Serial.println (_acceleration_curve[m_mode][a]);
+		}
+	}
+	#endif
+}
+
+/***** Main fucntion, move motor with defined acceleration a certain number of steps and cicles at a designed direction  *****/
+unsigned int Stepper_ac::ramp_up_accelerated()
+{
+	// Ramp UP
+	#if defined DEBUG_acceleration
+	unsigned int steps_done=0;
+	#endif
+	int indexed_m_mode = 3;		// temp var for get indexed data
+	unsigned int temp_delay;
+	for (int m_mode=8; m_mode>=1; m_mode = m_mode/2) {
+		change_step_mode(m_mode);
+		// Virtualitzation of previous delay each time we change step mode
+		int previous_delay = _acceleration_curve[indexed_m_mode][0];		// Each first parameter is just virtualitzation
+		// calculate exact delay per step
+		for (int counter_ramp=1 ; counter_ramp <= _n_slopes_per_mode; counter_ramp++){
+			unsigned int accel_del = _acceleration_curve[indexed_m_mode][counter_ramp];	// Fetch delay to achieve in this slope
+			#if defined DEBUG_acceleration
+			Serial.print(accel_del);
+			Serial.print(" at mode ");
+			Serial.print(indexed_m_mode);
+			Serial.print(" index ");
+			Serial.println(counter_ramp);
+			#endif
+			unsigned int decrement = (previous_delay-accel_del)/_n_steps_per_slope;	// We are accelerating so previous delay  
+																		// is always grater than the actual
+			temp_delay = previous_delay;					// We need a container for the delay increments
+			previous_delay = accel_del;									// Recording previous delay for next time
+			for (int a = 0; a < _n_steps_per_slope; a++){
+				do_step();
+				delayMicroseconds (temp_delay);
+				temp_delay = temp_delay-decrement;						// decrement delay each step (needs floating adjustment?)
+				#if defined DEBUG_acceleration
+				steps_done++;
+				#endif
+			}
+		}
+		indexed_m_mode--;		// Prepare for next motor mode index
+	}
+	#if defined DEBUG_acceleration
+	Serial.print("steps during ramp_up = ");
+	Serial.println(steps_done);
+	#endif
+	return temp_delay;			// Return max velocity achieved
+}
+
+/***** Move N steps at the max velocity ACCELERATED*****/
+unsigned int Stepper_ac::move_n_steps_fast_accelerated (unsigned int mov_steps, unsigned int inner_delay) {
+	// change_step_mode(1);		// Change mode 1
+	for (int a = 0; a < mov_steps/get_step_accuracy(); a++) {
+		do_step();
+		delayMicroseconds (inner_delay);
+	}
+	return (mov_steps % get_step_accuracy());
+}
+	
+
+void Stepper_ac::ramp_down_accelerated(){
+	// Ramp DOWN
+	int indexed_m_mode = 0;
+	#if defined DEBUG_acceleration
+	unsigned int steps_done=0;
+	#endif
+	for (int m_mode = 1; m_mode<= 8; m_mode = m_mode*2) {
+		change_step_mode(m_mode);
+		// Virtualitzation of previous delay each time we change step mode
+		int previous_delay = _acceleration_curve[indexed_m_mode][_n_slopes_per_mode];	// Each first parameter is just virtualitzation
+		// calculate exact delay per step
+		for (int counter_ramp=_n_slopes_per_mode-1; counter_ramp>=0; counter_ramp--){
+			unsigned int accel_del = _acceleration_curve[indexed_m_mode][counter_ramp];	// Fetch delay to achieve in this slope
+			#if defined DEBUG_acceleration
+			Serial.print(accel_del);
+			Serial.print(" at mode ");
+			Serial.print(indexed_m_mode);
+			Serial.print(" index ");
+			Serial.println(counter_ramp);
+			#endif
+			unsigned int increment = (accel_del-previous_delay)/_n_steps_per_slope;	// We are deaccelerating so previous delay  
+																						// is always smaller than the actual
+			unsigned int temp_delay = previous_delay;					// We need a container for the delay increments
+			previous_delay = accel_del;									// Recording previous delay for next time
+			for (int a = 0; a < _n_steps_per_slope; a++){
+				do_step();
+				delayMicroseconds (temp_delay);
+				temp_delay = temp_delay+increment;						// increment delay each step (needs floating adjustment?)
+				#if defined DEBUG_acceleration
+				steps_done++;
+				#endif
+			}
+		}
+	}
+	indexed_m_mode++;		// Prepare for next motor mode index
+	#if defined DEBUG_acceleration
+	Serial.print("steps during ramp_down = ");
+	Serial.println(steps_done);
+	#endif
+}
+	
+/***** NEW!! Main fucntion, ACCELERATION  *****/
+void Stepper_ac::move_motor_accel(unsigned int cycles,unsigned int steps, boolean direction)
+{
+	// we set direction
+	set_direction (!direction);
+	// Some previous calculations
+	// 4 modes
+	// _n_slopes_per_mode = n_slopes_per_mode;
+	// _n_steps_per_slope = n_steps_per_slope;
+	unsigned int total_steps_cycles_for_aceleration = (4*_n_slopes_per_mode*_n_steps_per_slope)*2;
+	#if defined DEBUG_acceleration
+	Serial.print("Calculation of steps taken for acceleration = ");
+	Serial.println(total_steps_cycles_for_aceleration);
+	#endif
+	unsigned int total_steps_for_aceleration = total_steps_cycles_for_aceleration % 1600;
+	unsigned int total_cycles_for_aceleration = total_steps_cycles_for_aceleration / 1600;
+	
+	if ((total_cycles_for_aceleration > cycles) || ((total_steps_for_aceleration > steps) && (total_cycles_for_aceleration == cycles))) {		// Meaning that we need to move less than we need to just acelerate
+		// Calculation total amount of steps
+		unsigned int total_steps_to_move = (cycles*1600)+steps;
+		// Moving....
+		move_n_steps_slow (total_steps_to_move);
+	}else{
+		// firs we prepare all calculations so we dont need to calculate in the middle
+		// removing fixed steps to accelerate from the total steps to move
+		if (steps > total_steps_for_aceleration) {				// If we have less steps that we got to rest then whe need to substract one cycle and use those steps to acomplish the rest
+			steps = steps - total_steps_for_aceleration;
+		}else{
+			total_steps_for_aceleration = total_steps_for_aceleration - steps;
+			steps = 1600;
+			cycles --;
+			steps = steps - total_steps_for_aceleration;
+		}
+		cycles = cycles - total_cycles_for_aceleration;
+
+		//////////////////////////////////
+		// Movement algorithm
+		//////////////////////////////////
+		// we start the ramp up and achieve certain velocity, we record this velocity in delay form
+		int unsigned max_v_delay = ramp_up_accelerated();
+	
+		// at a max velocity we move the desired steps and cycles
+		int unsigned remaining_steps = move_n_steps_fast_accelerated (steps, max_v_delay);
+		// inside "remaining_steps" there is the steps we couldnt do beacuse of a lack of resolution
+		// we will move them slowly at the end because now we are going at max speed.
+		
+		// Keep movement for the desired cycles also at max speed
+		for (int a = cycles; a > 0; a--) {
+			move_n_steps_fast_accelerated (1600, max_v_delay);			
+		}
+		#if defined DEBUG_acceleration
+		Serial.print("steps during max_v = ");
+		Serial.println(steps);
+		Serial.print("remaining steps at max_v = ");
+		Serial.println(remaining_steps);
+		Serial.print("cycles during max_v = ");
+		Serial.println(cycles);
+		#endif
+
+		// once we moved all steps we start the ramp down
+		ramp_down_accelerated();
+
+		//Now that we are almost stop and the resolution of the motor is max, we move the steps we missed at max speed
+		move_n_steps_slow (remaining_steps);
+		//
+		//END
 	}
 }
 
 
+////////////////////////////// OLD VERSION TO BE ELIMINATED AT THE END
 
 /***** Main fucntion, move motor a certain number of steps and cicles at a designed direction  *****/
 void Stepper_ac::move_motor(unsigned int cycles,unsigned int steps, int accel_factor, boolean direction)
