@@ -80,7 +80,8 @@ class Stepper_ac
 	unsigned int _ramp_inclination;
 	unsigned int _n_slopes_per_mode;
 	unsigned int _n_steps_per_slope;	
-	unsigned int _acceleration_curve[4][21];	
+	unsigned int _acceleration_curve[4][21];
+	unsigned int _remaining_steps;
 };
 
 #endif

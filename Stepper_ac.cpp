@@ -13,7 +13,7 @@
 #include "WProgram.h"
 #include "Stepper_ac.h"
 
-//  #define DEBUG_acceleration		// Not recomended in real situation, motor wont respond correctly
+  #define DEBUG_acceleration		// Not recomended in real situation, motor wont respond correctly
 
 #define lib_version 12
 // SETUP	
@@ -59,6 +59,7 @@ Stepper_ac::Stepper_ac(const int step_pin, const int direction_pin, const int se
 	// _n_slopes_per_mode = 10;		// It also increases the inclination as more steps more divisions 
 	// ABSOLUT MAX 20!!!!!!!!!!!!!
 	// _n_steps_per_slope = 50;
+	_remaining_steps = 0;
 
 }
 
@@ -420,6 +421,7 @@ unsigned int Stepper_ac::ramp_up_accelerated()
 				steps_done++;
 				#endif
 			}
+			//_remaining_steps =+ (_n_steps_per_slope % get_step_accuracy());
 		}
 		indexed_m_mode--;		// Prepare for next motor mode index
 	}
@@ -433,11 +435,21 @@ unsigned int Stepper_ac::ramp_up_accelerated()
 /***** Move N steps at the max velocity ACCELERATED*****/
 unsigned int Stepper_ac::move_n_steps_fast_accelerated (unsigned int mov_steps, unsigned int inner_delay) {
 	// change_step_mode(1);		// Change mode 1
-	for (int a = 0; a < mov_steps/get_step_accuracy(); a++) {
+	#if defined DEBUG_acceleration
+	unsigned long steps=0;
+	#endif
+	for (int a = 0; a < (mov_steps/get_step_accuracy()); a++) {
 		do_step();
 		delayMicroseconds (inner_delay);
+		#if defined DEBUG_acceleration
+		steps++;
+		#endif
 	}
-	return (mov_steps % get_step_accuracy());
+	#if defined DEBUG_acceleration
+	Serial.print("steps done during max_v = ");
+	Serial.println(steps);
+	#endif
+	return mov_steps%get_step_accuracy();
 }
 	
 
@@ -473,6 +485,7 @@ void Stepper_ac::ramp_down_accelerated(){
 				steps_done++;
 				#endif
 			}
+			//_remaining_steps =+ (_n_steps_per_slope % get_step_accuracy());
 		}
 	}
 	indexed_m_mode++;		// Prepare for next motor mode index
@@ -491,7 +504,9 @@ void Stepper_ac::move_motor_accel(unsigned int cycles,unsigned int steps, boolea
 	// 4 modes
 	// _n_slopes_per_mode = n_slopes_per_mode;
 	// _n_steps_per_slope = n_steps_per_slope;
-	unsigned int total_steps_cycles_for_aceleration = (4*_n_slopes_per_mode*_n_steps_per_slope)*2;
+	//unsigned int total_steps_cycles_for_aceleration = (4*_n_slopes_per_mode*_n_steps_per_slope)*2;
+	//unsigned int total_steps_cycles_for_aceleration = ((_n_steps_per_slope)+(_n_steps_per_slope*2)+(_n_steps_per_slope*4)+(_n_steps_per_slope*8))*_n_slopes_per_mode*2;
+	unsigned int total_steps_cycles_for_aceleration = (_n_steps_per_slope + (_n_steps_per_slope*2) + (_n_steps_per_slope*4) + (_n_steps_per_slope*8))*_n_slopes_per_mode*2;
 	#if defined DEBUG_acceleration
 	Serial.print("Calculation of steps taken for acceleration = ");
 	Serial.println(total_steps_cycles_for_aceleration);
@@ -516,36 +531,41 @@ void Stepper_ac::move_motor_accel(unsigned int cycles,unsigned int steps, boolea
 			steps = steps - total_steps_for_aceleration;
 		}
 		cycles = cycles - total_cycles_for_aceleration;
-
+		
 		//////////////////////////////////
 		// Movement algorithm
 		//////////////////////////////////
 		// we start the ramp up and achieve certain velocity, we record this velocity in delay form
 		int unsigned max_v_delay = ramp_up_accelerated();
-	
+		
+		#if defined DEBUG_acceleration
+		Serial.print("steps calculated during max_v = ");
+		Serial.println(steps);
+		#endif
 		// at a max velocity we move the desired steps and cycles
-		int unsigned remaining_steps = move_n_steps_fast_accelerated (steps, max_v_delay);
+		_remaining_steps = move_n_steps_fast_accelerated (steps, max_v_delay);
 		// inside "remaining_steps" there is the steps we couldnt do beacuse of a lack of resolution
 		// we will move them slowly at the end because now we are going at max speed.
 		
+		#if defined DEBUG_acceleration		
+		Serial.print("cycles during max_v = ");
+		Serial.println(cycles);
+		#endif
 		// Keep movement for the desired cycles also at max speed
 		for (int a = cycles; a > 0; a--) {
 			move_n_steps_fast_accelerated (1600, max_v_delay);			
 		}
-		#if defined DEBUG_acceleration
-		Serial.print("steps during max_v = ");
-		Serial.println(steps);
-		Serial.print("remaining steps at max_v = ");
-		Serial.println(remaining_steps);
-		Serial.print("cycles during max_v = ");
-		Serial.println(cycles);
-		#endif
 
 		// once we moved all steps we start the ramp down
 		ramp_down_accelerated();
-
+		
+		#if defined DEBUG_acceleration		
+		Serial.print("remaining steps at max_v = ");
+		Serial.println(_remaining_steps);
+		#endif
 		//Now that we are almost stop and the resolution of the motor is max, we move the steps we missed at max speed
-		move_n_steps_slow (remaining_steps);
+		move_n_steps_slow (_remaining_steps);
+
 		//
 		//END
 	}
@@ -562,7 +582,8 @@ void Stepper_ac::move_motor(unsigned int cycles,unsigned int steps, int accel_fa
 	// accel factor standard = 40
 	// Some previos calculations
 	// 920*2 = 1840
-	unsigned int total_steps_cycles_for_aceleration = (accel_factor + (accel_factor*2) + (accel_factor*4) + (accel_factor*8*2))*2;
+	// PUT THE OLD ONE HERE CODE MISSING
+	unsigned int total_steps_cycles_for_aceleration = (4*_n_slopes_per_mode*_n_steps_per_slope)*2;
 	unsigned int total_steps_for_aceleration = total_steps_cycles_for_aceleration % 1600;
 	unsigned int total_cycles_for_aceleration = total_steps_cycles_for_aceleration / 1600;
 	
