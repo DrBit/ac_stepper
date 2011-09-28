@@ -54,6 +54,7 @@ class Stepper_ac
 	unsigned int move_n_steps_fast_accelerated (unsigned int mov_steps,unsigned int inner_delay);
 	void ramp_down_accelerated();
 	void move_motor_accel(unsigned int cycles,unsigned int steps, boolean direction);
+	void set_speed_in_slow_mode (unsigned int delay_slow_mode);
 	//Properties
 	int step_accuracy;
 	int step_mode;
@@ -82,6 +83,7 @@ class Stepper_ac
 	unsigned int _n_steps_per_slope;	
 	unsigned int _acceleration_curve[4][21];
 	unsigned int _remaining_steps;
+	unsigned int _delay_slow_mode;
 };
 
 #endif

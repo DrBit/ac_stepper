@@ -5,7 +5,14 @@
 *********************************************
 **  REVISIONS
 **
-**  V1.1 - 14/09/2011
+**  V1.3 - 28/09/2011
+**  * Added some customitzation on custom velocity changes
+**
+**  V1.2 - 20/09/2011
+**  * Changed the hole system of acceleration, now each motor ahs its own acceleration curve
+**	  The curves is more customitzable than before and has a much better resolution on acceleration
+**
+**  V1.1 - /4/09/2011
 **  * Fix bug in motor "got_to_position" function in which would cause an error when calling it and trying to go to the same position we where.
 **
 **  V1.0 - 31/08/2011

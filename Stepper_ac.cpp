@@ -15,7 +15,7 @@
 
 //  #define DEBUG_acceleration		// Not recomended in real situation, motor wont respond correctly
 
-#define lib_version 12
+#define lib_version 13
 // SETUP	
 // int step_pin -- Pin where the step control is connected
 // int direction_pin -- Pin where the direction control is connected
@@ -60,6 +60,7 @@ Stepper_ac::Stepper_ac(const int step_pin, const int direction_pin, const int se
 	// ABSOLUT MAX 20!!!!!!!!!!!!!
 	// _n_steps_per_slope = 50;
 	_remaining_steps = 0;
+	_delay_slow_mode = 200;			// Default speed in slow mode
 
 }
 
@@ -656,8 +657,12 @@ void Stepper_ac::move_n_steps_slow (unsigned int mov_steps){
 	// Executing steps
 	for (int a = 0; a < mov_steps; a++) {
 		do_step();
-		delayMicroseconds (260);
+		delayMicroseconds (_delay_slow_mode);
 	}
+}
+
+void Stepper_ac::set_speed_in_slow_mode (unsigned int delay_slow_mode) {
+	_delay_slow_mode = delay_slow_mode;
 }
 
 // ************************************************************
