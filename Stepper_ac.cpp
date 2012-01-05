@@ -49,6 +49,7 @@ Stepper_ac::Stepper_ac(const int step_pin, const int direction_pin, const int se
 	_stepCycle = 0;
 	// INITS (setup)
 	change_step_mode(step_mode);
+	set_default_direcction (true);
 	// Acceleration parameters DEFAULT
 	// set_accel_profile(unsigned int init_timing, unsigned int ramp_inclination, unsigned int n_slopes_per_mode, unsigned int n_steps_per_slope)
 	set_accel_profile(700, 14, 10, 50);
@@ -143,18 +144,29 @@ int Stepper_ac::get_steps_cycles()
 // Sets direction of the motor movement
 void Stepper_ac::set_direction(bool direction)
 {
-	_direction=direction;
+	if (_default_direction) {
+		_direction= direction;
+	}else{
+		_direction= !direction;
+	}
+	
 	if(_direction){
 		digitalWrite (_direction_pin, HIGH);
 	}else{
 		digitalWrite (_direction_pin, LOW);
-	}	
+	}
 }
 
 // Reads the actual direction of the motor
 bool Stepper_ac::get_direction()
 {
-	return digitalRead(_direction_pin);
+	bool direction = _direction;
+	return direction;
+}
+
+void Stepper_ac::set_default_direcction (bool direction)
+{
+	_default_direction=direction;
 }
 
 // Order to make the motor move one step (with coun ting steps enabled)
@@ -165,6 +177,7 @@ void Stepper_ac::do_step()
   // And because its a private variable, each instance of motor has its own position
   // static unsigned char counter = 0;
   // Update position
+	
   count_step(_direction);
 
   // Change the counter in order to add steps at it
@@ -179,7 +192,8 @@ void Stepper_ac::do_step()
 
 void Stepper_ac::count_step(bool _temp_direction)
 {
-	if(!_temp_direction){
+	
+	if(_temp_direction){
 		_stepPosition = _stepPosition + _step_accuracy;
 	}else{
 		_stepPosition = _stepPosition - _step_accuracy;
@@ -316,6 +330,13 @@ void Stepper_ac::got_to_position (unsigned int pos_cycles, unsigned int pos_step
 		// OLD procedure
 		// move_motor(cycles_to_move, steps_to_move, acceleration, direction);
 		// NEW procedure
+		
+		if (_default_direction) {
+			direction = direction;
+		}else{
+			direction = !direction;
+		}
+
 		move_motor_accel(cycles_to_move,steps_to_move, direction);
 	}
 }
@@ -500,7 +521,7 @@ void Stepper_ac::ramp_down_accelerated(){
 void Stepper_ac::move_motor_accel(unsigned int cycles,unsigned int steps, boolean direction)
 {
 	// we set direction
-	set_direction (!direction);
+	set_direction (direction);
 	// Some previous calculations
 	// 4 modes
 	// _n_slopes_per_mode = n_slopes_per_mode;
@@ -579,7 +600,7 @@ void Stepper_ac::move_motor_accel(unsigned int cycles,unsigned int steps, boolea
 void Stepper_ac::move_motor(unsigned int cycles,unsigned int steps, int accel_factor, boolean direction)
 {
 	// we set direction
-	set_direction (!direction);
+	set_direction (direction);
 	// accel factor standard = 40
 	// Some previos calculations
 	// 920*2 = 1840

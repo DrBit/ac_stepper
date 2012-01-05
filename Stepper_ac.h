@@ -30,6 +30,7 @@ class Stepper_ac
 	int get_steps_cycles();
 	bool get_direction();
 	void set_direction(bool direction);
+	void set_default_direcction (bool direction);
 	void move_step();
 	void change_step_mode(int new_step_mode); 
 	int get_step_accuracy();
@@ -72,7 +73,8 @@ class Stepper_ac
 	long _motor_total_possible_steps;		//! Numer of stpes of the motor (if using a different type of motor)
 	long _stepPosition;				//! Position of stepper motor (relative to starting position as zero) 
 	int _stepCycle;
-	bool _direction;	
+	bool _direction;
+    bool _default_direction;	
 	int _step_accuracy;				//! Step accuracy is the number of steps we are counting each time me move. This property depends on the motor mode we selected
 	int _step_mode;
 	int _motor_original_steps;
