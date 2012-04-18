@@ -10,12 +10,17 @@
 **
 */
 
-#include "WProgram.h"
+#if defined(ARDUINO) && ARDUINO >= 100
+  #include "Arduino.h"
+#else
+  #include "WProgram.h"
+#endif
+
 #include "Stepper_ac.h"
 
 //  #define DEBUG_acceleration		// Not recomended in real situation, motor wont respond correctly
 
-#define lib_version 13
+#define lib_version 14
 // SETUP	
 // int step_pin -- Pin where the step control is connected
 // int direction_pin -- Pin where the direction control is connected
@@ -361,7 +366,7 @@ void Stepper_ac::calculate_profile () {
 	Serial.println((_n_slopes_per_mode+1));
 	#endif
 	
-	// max sbdolute delay between steps is 160, less than that will have almost no torke;
+	// max absolute delay between steps is 160, less than that will have almost no torke;
 	
 	//      ___________Max_speed_____
 	//    _/
@@ -369,7 +374,7 @@ void Stepper_ac::calculate_profile () {
 	// /____ _ _ _ _ _ _ _ _ _ _ _ 
 	//
 	//////////////////////////////////////////
-	// each slope is at the same time smothed in small linear increments
+	// each slope is at the same time smoothed in small linear increments
 	unsigned int timing	= _init_timing;
 	//int motor_mode = init_motor_mode;
 	for (int m_mode=3; m_mode>=0; m_mode--) {
