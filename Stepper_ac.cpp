@@ -20,7 +20,7 @@
 
 //  #define DEBUG_acceleration		// Not recomended in real situation, motor wont respond correctly
 
-#define lib_version 14
+#define lib_version 15
 // SETUP	
 // int step_pin -- Pin where the step control is connected
 // int direction_pin -- Pin where the direction control is connected
@@ -41,6 +41,7 @@ Stepper_ac::Stepper_ac(const int step_pin, const int direction_pin, const int se
 	if (ms2 != 0) pinMode(ms2, OUTPUT);					// if ms1 pin is 0 means there is no ms1 pin for this motor. so we don't init any port
 	_step_pin = step_pin;
 	_direction_pin = direction_pin;
+	_default_sensor_state = true;
 	_sensor_pin = sensor_pin;
 	_ms1 = ms1;
 	_ms2 = ms2;
@@ -174,6 +175,11 @@ void Stepper_ac::set_default_direcction (bool direction)
 	_default_direction=direction;
 }
 
+void Stepper_ac::set_default_sensor_state (bool default_sensor_state)
+{
+	_default_sensor_state = default_sensor_state;
+}
+
 // Order to make the motor move one step (with coun ting steps enabled)
 void Stepper_ac::do_step()
 {
@@ -264,8 +270,12 @@ bool Stepper_ac::sensor_check()
 {
 	// Because its a barrier sensor the pin its inverted, so we have 0 when we have a sensor
 	// hence the "!" in front of the digitalRead, so we invert the signal ** RECHEK!!!
-	if (_sensor_pin != 0) {    // If _sensor_pin == 0 means we dont have any sensor for this motor. we will return 0 Alwais
-		return (!digitalRead(_sensor_pin));
+	if (_sensor_pin != 0) {    // If _sensor_pin == 0 means we dont have any sensor for this motor. we will return 0 Always
+		if (_default_sensor_state) {
+			return (digitalRead(_sensor_pin));
+		}else{
+			return (!digitalRead(_sensor_pin));
+		}
 	} else {
 		return false;
 	}

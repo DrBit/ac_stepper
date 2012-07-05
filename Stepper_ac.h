@@ -20,7 +20,6 @@
 #endif
 
 
-
 class Stepper_ac
 {
   public:
@@ -35,6 +34,7 @@ class Stepper_ac
 	bool get_direction();
 	void set_direction(bool direction);
 	void set_default_direcction (bool direction);
+	void set_default_sensor_state (bool default_sensor_state);
 	void move_step();
 	void change_step_mode(int new_step_mode); 
 	int get_step_accuracy();
@@ -78,7 +78,8 @@ class Stepper_ac
 	long _stepPosition;				//! Position of stepper motor (relative to starting position as zero) 
 	int _stepCycle;
 	bool _direction;
-    bool _default_direction;	
+    bool _default_direction;
+    bool _default_sensor_state;	
 	int _step_accuracy;				//! Step accuracy is the number of steps we are counting each time me move. This property depends on the motor mode we selected
 	int _step_mode;
 	int _motor_original_steps;
