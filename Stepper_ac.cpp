@@ -156,7 +156,7 @@ void Stepper_ac::set_direction(bool direction)
 		_direction= !direction;
 	}
 	
-	if(_direction){
+	if(direction){
 		digitalWrite (_direction_pin, HIGH);
 	}else{
 		digitalWrite (_direction_pin, LOW);
@@ -172,7 +172,7 @@ bool Stepper_ac::get_direction()
 
 void Stepper_ac::set_default_direcction (bool direction)
 {
-	_default_direction=direction;
+	_default_direction = direction;
 }
 
 void Stepper_ac::set_default_sensor_state (bool default_sensor_state)
@@ -302,13 +302,11 @@ void Stepper_ac::got_to_position (unsigned int pos_cycles, unsigned int pos_step
 	// determine the direction X axis
 	boolean direction;
 	if (cycles_to_move < 0) {
-		// Direction false
-		direction = false;
+		direction = false;		// Direction false
 	}else if (cycles_to_move > 0) {
-		//  direction true
-		direction = true;
+		direction = true;		//  direction true
 	}else{  			// Means its = to 0
-		// we need to check the steps in order to determine the direction
+		// we need to check the steps in order to determine the direction if there are no cycles to move
 		if (steps_to_move < 0) {
 			direction = false;
 		}else if (steps_to_move > 0){
@@ -345,6 +343,7 @@ void Stepper_ac::got_to_position (unsigned int pos_cycles, unsigned int pos_step
 		// OLD procedure
 		// move_motor(cycles_to_move, steps_to_move, acceleration, direction);
 		// NEW procedure
+		
 		
 		if (_default_direction) {
 			direction = direction;
@@ -609,73 +608,7 @@ void Stepper_ac::move_motor_accel(unsigned int cycles,unsigned int steps, boolea
 }
 
 
-////////////////////////////// OLD VERSION TO BE ELIMINATED AT THE END
 
-/***** Main fucntion, move motor a certain number of steps and cicles at a designed direction  *****/
-void Stepper_ac::move_motor(unsigned int cycles,unsigned int steps, int accel_factor, boolean direction)
-{
-	// we set direction
-	set_direction (direction);
-	// accel factor standard = 40
-	// Some previos calculations
-	// 920*2 = 1840
-	// PUT THE OLD ONE HERE CODE MISSING
-	unsigned int total_steps_cycles_for_aceleration = (4*_n_slopes_per_mode*_n_steps_per_slope)*2;
-	unsigned int total_steps_for_aceleration = total_steps_cycles_for_aceleration % 1600;
-	unsigned int total_cycles_for_aceleration = total_steps_cycles_for_aceleration / 1600;
-	
-	if ((total_cycles_for_aceleration > cycles) || ((total_steps_for_aceleration > steps) && (total_cycles_for_aceleration == cycles))) {		// Meaning that we need to move less than we need to just acelerate
-		// Calculation total amount of steps
-		unsigned int total_steps_to_move = (cycles*1600)+steps;
-		// Moving....
-		move_n_steps_slow (total_steps_to_move);
-	}else{
-		// firs we prepare all calculations so we dont need to calculate in the middle
-		// removing fixed steps to accelerate from the total steps to move
-		if (steps > total_steps_for_aceleration) {				// If we have less steps that we got to rest then whe need to substract one cycle and use those steps to acomplish the rest
-			steps = steps - total_steps_for_aceleration;
-		}else{
-			total_steps_for_aceleration = total_steps_for_aceleration - steps;
-			steps = 1600;
-			cycles --;
-			steps = steps - total_steps_for_aceleration;
-		}
-		cycles = cycles - total_cycles_for_aceleration;
-
-		// we start the ramp up and achieve certain velocity
-		ramp_up (accel_factor);												// 920 steps FIXED
-
-		// at a certain velocity we move the steps
-		int remaining_steps = move_n_steps_fast (steps) ;
-		// inside "remaining_steps" there is the steps we couldnt do beacuse of a lack of resolution
-		// we will move them slowlty at the end because now we are going at max speed.
-
-		// then we move all cycles also at max speed
-		for (int a = cycles; a > 0; a--) {
-			move_n_steps_fast (1600) ;			
-		}
-
-		// once we moved all steps we start the ramp down
-		ramp_down(accel_factor);											// 920 steps FIXED
-
-		//Now that we are almost stop and the resolution of the motor is max, we move the steps we missed at max speed
-		move_n_steps_slow (remaining_steps);
-	}
-}
-
-/***** Ramping up, achieve velocity  *****/
-void Stepper_ac::ramp_up (int accel_factor) {
-	for (int i = 1; i< 6; i++) {
-		select_case (i, accel_factor);
-	}
-}
-
-/***** Ramping down, decreasing velocity  *****/
-void Stepper_ac::ramp_down (int accel_factor) {
-	for (int i = 5; i> 0; i--) {
-		select_case (i, accel_factor);
-	} 
-}
 
 /***** Move N steps at the max velocity *****/
 int Stepper_ac::move_n_steps_fast (unsigned int mov_steps) {
@@ -701,53 +634,6 @@ void Stepper_ac::set_speed_in_slow_mode (unsigned int delay_slow_mode) {
 	_delay_slow_mode = delay_slow_mode;
 }
 
-// ************************************************************
-// ** Extra functions for ramping and testing
-// ************************************************************
-
-/***** Ramping cases for changin velocities *****/
-void Stepper_ac::select_case (int vel_case, int steps_case) {
-	//const int steps_case = 40;  // ol variable for defining number of steps to do in each velocity step
-
-	// for acelerating or deacelerating (for both = result*2)
-	// formula = steps_case + (steps_case*2) + (steps_case*4) + (steps_case*8*2) 
-	
-	if (vel_case == 1) {
-		change_step_mode(8);		// Change mode 8
-		for (int a = 0; a < steps_case; a++) {
-			do_step();
-			delayMicroseconds (260);
-		}
-	}
-	if (vel_case == 2) {
-		change_step_mode(4);		// Change mode 4
-		for (int a = 0; a < steps_case; a++) {
-			do_step();
-			delayMicroseconds (350);
-		}
-	}
-	if (vel_case == 3) {
-		change_step_mode(2);		// Change mode 2
-		for (int a = 0; a < steps_case; a++) {
-			do_step();
-			delayMicroseconds (450);
-		}
-	}
-	if (vel_case == 4) {
-		change_step_mode(1);		// Change mode 1
-		for (int a = 0; a < steps_case; a++) {
-			do_step();
-			delayMicroseconds (560);
-		}
-	}
-	if (vel_case == 5) {
-		change_step_mode(1);		// Change mode 1
-		for (int a = 0; a < steps_case; a++) {
-			do_step();
-			delayMicroseconds (500);
-		}
-	}
-}
 
 
 int Stepper_ac::get_version() {
