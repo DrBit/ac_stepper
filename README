@@ -6,7 +6,7 @@
 **  REVISIONS
 **
 **  V1.5 - 05/07/2012
-**  * Added default senso state (in case we change the logics of the sensors)
+**  * Added default sensor state (in case we change the logics of the sensors)
 **
 **  V1.4 - 18/09/2011
 **  * Arduino UNO compatible
