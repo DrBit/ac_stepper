@@ -355,7 +355,10 @@ void Stepper_ac::got_to_position (unsigned int pos_cycles, unsigned int pos_step
 	}
 }
 
+
+
 /***** Acceleration profile, gives to acceleration the right parameters  *****/
+
 void Stepper_ac::set_accel_profile(unsigned int init_timing, unsigned int ramp_inclination, unsigned int n_slopes_per_mode, unsigned int n_steps_per_slope)
 {
 	// Acceleration parameters
@@ -365,6 +368,61 @@ void Stepper_ac::set_accel_profile(unsigned int init_timing, unsigned int ramp_i
 	_n_steps_per_slope = n_steps_per_slope;
 	calculate_profile ();
 }
+
+
+/*
+void Stepper_ac::set_acce_and_speed_profile(unsigned int init_speed, unsigned int max_speed, unsigned int acceleration)
+{
+	// Acceleration parameters
+	_init_speed = init_speed;
+	_max_speed = max_speed;
+	_acceleration = acceleration;		// MAX 20
+	calculate_acceleration ();
+}
+
+/*
+void Stepper_ac::calculate_profile () {
+	#if defined DEBUG_acceleration
+	#endif
+
+	// max absolute delay between steps is 160, less than that will have almost no torke;	
+	//      ___________Max_speed_____
+	//    _/
+	//  _/ _acceleration steps (less = faster)
+	// /____ _ _ _ _ _ INIT SPEED_ _ _ _ _ _ 
+	//
+	//////////////////////////////////////////
+
+	unsigned int _differential_speed = _init_speed - _max_speed;
+	unsigned int _delay_between_steps = _differential_speed / _acceleration ;
+	unsigned int  _delay1useceveryNsteps = _acceleration /(_differential_speed % _acceleration);
+	float  _delay1useceveryNsteps = (_acceleration /(_differential_speed % _acceleration)) - _delay1useceveryNsteps;
+
+	// The result is the amount of micro seconds we have to decrease in each step
+	// if ms is > 0
+	// example 0.2 microseconds per step
+	// in this case we know that each time we do a step we increase
+
+	// if ms is < 
+	int stepping_rest = 0
+	for (int c = _acceleration; c < =; z --) {
+		do_step();
+		delayMicroseconds (delay_delay_between_steps);
+		stepping_rest ++;
+		if ((_delay1useceveryNsteps == stepping_rest){
+			delayMicroseconds (1);
+			stepping_rest = 0;
+			if (_delay1useceveryNsteps >= 1) {
+				_delay1useceveryNsteps += _delay1useceveryNsteps;
+			}
+		}
+	}
+
+}
+*/
+
+
+
 
 /***** Calculate profile, calculates and stores all delays in a matrix  *****/
 void Stepper_ac::calculate_profile () {
@@ -550,11 +608,14 @@ void Stepper_ac::move_motor_accel(unsigned int cycles,unsigned int steps, boolea
 	unsigned int total_steps_for_aceleration = total_steps_cycles_for_aceleration % 1600;
 	unsigned int total_cycles_for_aceleration = total_steps_cycles_for_aceleration / 1600;
 	
-	if ((total_cycles_for_aceleration > cycles) || ((total_steps_for_aceleration > steps) && (total_cycles_for_aceleration == cycles))) {		// Meaning that we need to move less than we need to just acelerate
+	if (true) {
+	//if ((total_cycles_for_aceleration > cycles) || ((total_steps_for_aceleration > steps) && (total_cycles_for_aceleration == cycles))) {		// Meaning that we need to move less than we need to just acelerate
 		// Calculation total amount of steps
 		unsigned int total_steps_to_move = (cycles*1600)+steps;
+		// We should check if the result is bigger than unsigned int or we would have problems
 		// Moving....
 		move_n_steps_slow (total_steps_to_move);
+
 	}else{
 		// firs we prepare all calculations so we dont need to calculate in the middle
 		// removing fixed steps to accelerate from the total steps to move
@@ -612,7 +673,7 @@ void Stepper_ac::move_motor_accel(unsigned int cycles,unsigned int steps, boolea
 
 /***** Move N steps at the max velocity *****/
 int Stepper_ac::move_n_steps_fast (unsigned int mov_steps) {
-	change_step_mode(1);		// Change mode 1
+	// change_step_mode(1);		// Change mode 1
 	for (int a = 0; a < mov_steps/get_step_accuracy(); a++) {
 		do_step();
 		delayMicroseconds (490);
@@ -624,10 +685,44 @@ int Stepper_ac::move_n_steps_fast (unsigned int mov_steps) {
 void Stepper_ac::move_n_steps_slow (unsigned int mov_steps){
 	change_step_mode(8);		// Change mode 8 steps 
 	// Executing steps
-	for (int a = 0; a < mov_steps; a++) {
-		do_step();
-		delayMicroseconds (_delay_slow_mode);
-	}
+
+	unsigned int accel_steps_period = 45;
+	int accel_slopes = 21;
+	int increments_of_microseconds = 8;
+	unsigned int temporal_delay = _delay_slow_mode;
+
+	if (mov_steps > (accel_slopes*2*accel_steps_period)) {
+		/// aceleration
+		for (int slopes_done = 1; slopes_done <=accel_slopes; slopes_done++) {
+			for (unsigned int steps_done = 1; steps_done <= accel_steps_period; steps_done++) {
+				do_step();
+				delayMicroseconds (temporal_delay);
+			}
+			temporal_delay = temporal_delay - increments_of_microseconds;		// iNCREMENTS ON SPEED PER SLOPE
+		}
+
+		/// full speed
+		for (unsigned int steps_at_max= 1; steps_at_max <= (mov_steps-(accel_slopes*2*accel_steps_period)); steps_at_max++) {
+				do_step();
+				delayMicroseconds (temporal_delay);
+		}
+
+		// deceleration
+		for (int slopes_done = 1; slopes_done <=accel_slopes; slopes_done++) {
+
+			temporal_delay = temporal_delay + increments_of_microseconds;		// iNCREMENTS ON SPEED PER SLOPE
+			for (unsigned int steps_done = 1; steps_done <= accel_steps_period; steps_done++) {
+				do_step();
+				delayMicroseconds (temporal_delay);
+			}
+		}
+	}else{
+		for (unsigned int a = 0; a < mov_steps; a++) {
+			do_step();
+			delayMicroseconds (_delay_slow_mode);
+		}
+	}	
+
 }
 
 void Stepper_ac::set_speed_in_slow_mode (unsigned int delay_slow_mode) {

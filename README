@@ -5,6 +5,10 @@
 *********************************************
 **  REVISIONS
 **
+**  V1.5.1 - 05/07/2012
+**  * Changed the speed function completetly (starting to program new one) already   
+**    working.
+**
 **  V1.5 - 05/07/2012
 **  * Added default sensor state (in case we change the logics of the sensors)
 **
